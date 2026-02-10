@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import { X402Middleware } from '../middleware/x402.middleware';
 import { AIRouterService } from '../services/ai/ai-router.service';
 import { logger } from '../utils/logger';
 
-const router = Router();
+const router: ExpressRouter = Router();
 const x402 = new X402Middleware();
 
 // Lazy initialization - create AIRouter when first needed, after env vars are loaded

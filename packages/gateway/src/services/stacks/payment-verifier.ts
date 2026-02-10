@@ -30,7 +30,7 @@ export class PaymentVerifier {
   async verifyTransaction(txId: string): Promise<TransactionVerification> {
     try {
       logger.info(`Verifying transaction: ${txId}`);
-      const tx = await this.api.getTransactionById({ txId });
+      const tx = await this.api.getTransactionById({ txId }) as any;
 
       if (tx.tx_status !== 'success') {
         return {

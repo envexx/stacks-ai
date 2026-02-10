@@ -250,20 +250,20 @@ export default function Playground() {
   const selectedModelData = MODELS.find(m => m.id === selectedModel)
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="h-screen bg-black text-white flex overflow-hidden">
       {/* Orange Glow Effect */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-[#FF6D29] via-[#FF8C4A] to-[#FF6D29] rounded-full blur-[200px] opacity-30" />
       </div>
 
       <div
-        className={`fixed inset-y-0 left-0 z-50 bg-black/50 backdrop-blur-xl border-r border-white/10 transform transition-all duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 bg-black/50 backdrop-blur-xl border-r border-white/10 transform transition-all duration-300 ease-in-out flex flex-col ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:relative md:translate-x-0 ${
           isSidebarCollapsed ? 'w-16' : 'w-64'
         }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           <div className="p-3 border-b border-white/10 flex justify-between items-center">
             {!isSidebarCollapsed && (
               <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export default function Playground() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3">
+              <div className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 <div className="text-xs font-semibold text-white/50 mb-2">HISTORY</div>
                 {sessions.length === 0 ? (
                   <div className="text-xs text-white/30 text-center py-4">
@@ -397,8 +397,8 @@ export default function Playground() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-black/50 backdrop-blur-xl sticky top-0 z-10">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-black/50 backdrop-blur-xl flex-shrink-0 z-10">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -423,7 +423,7 @@ export default function Playground() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-transparent relative z-10">
+        <div className="flex-1 overflow-y-auto bg-transparent relative scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center p-4">
               <div className="text-center max-w-md">
@@ -437,33 +437,46 @@ export default function Playground() {
               </div>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
               {messages.map((message) => (
-                <div key={message.id} className="flex gap-3 group">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-xs font-semibold text-white">
-                    {message.role === 'user' ? 'U' : 'AI'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-white/70 mb-1">
+                <div key={message.id} className={`flex gap-3 group ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {message.role === 'assistant' && (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-blue-400/30 flex items-center justify-center text-xs font-semibold text-blue-300">
+                      AI
+                    </div>
+                  )}
+                  <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                    message.role === 'user'
+                      ? 'bg-gradient-to-br from-[#FF6D29]/20 to-[#FF8C4A]/20 border border-[#FF6D29]/30 backdrop-blur-sm'
+                      : 'bg-white/5 border border-white/10 backdrop-blur-sm'
+                  }`}>
+                    <div className="text-xs font-medium mb-1.5 ${
+                      message.role === 'user' ? 'text-[#FF6D29]' : 'text-blue-300'
+                    }">
                       {message.role === 'user' ? 'You' : selectedModelData?.name}
                     </div>
                     <div className="text-sm text-white leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </div>
                   </div>
+                  {message.role === 'user' && (
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6D29]/30 to-[#FF8C4A]/30 backdrop-blur-sm border border-[#FF6D29]/50 flex items-center justify-center text-xs font-semibold text-[#FF6D29]">
+                      U
+                    </div>
+                  )}
                 </div>
               ))}
               {loading && (
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-xs font-semibold text-white">
+                <div className="flex gap-3 justify-start">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-blue-400/30 flex items-center justify-center text-xs font-semibold text-blue-300">
                     AI
                   </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-medium text-white/70 mb-1">{selectedModelData?.name}</div>
+                  <div className="max-w-[75%] rounded-2xl px-4 py-3 bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <div className="text-xs font-medium text-blue-300 mb-1.5">{selectedModelData?.name}</div>
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-[#FF6D29] rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-[#FF6D29] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-[#FF6D29] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 </div>
@@ -481,7 +494,7 @@ export default function Playground() {
           </div>
         )}
 
-        <div className="p-4 border-t border-white/10 bg-black/50 backdrop-blur-xl relative z-10">
+        <div className="p-4 border-t border-white/10 bg-black/50 backdrop-blur-xl flex-shrink-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="relative">
               <input
