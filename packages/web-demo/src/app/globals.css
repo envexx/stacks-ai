@@ -1,0 +1,66 @@
+@import url('https://fonts.cdnfonts.com/css/neue-montreal');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 255 109 41;
+    --secondary: 69 48 39;
+    --accent: 22 19 22;
+    --background: 42 24 16;
+  }
+  
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-white text-slate-900;
+    font-family: 'Neue Montreal', 'Inter', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Neue Montreal', 'Inter', system-ui, sans-serif;
+    font-weight: 500;
+  }
+}
+
+@layer components {
+  .text-primary {
+    @apply text-slate-900;
+  }
+  
+  .bg-primary {
+    @apply bg-slate-900;
+  }
+  
+  .border-primary {
+    @apply border-slate-900;
+  }
+}
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}

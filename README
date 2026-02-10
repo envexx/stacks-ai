@@ -1,0 +1,1100 @@
+# 🤖 Pay-per-Prompt AI Gateway - Rancangan Lengkap
+
+Excellent choice! Ide ini sangat kuat karena:
+- ✅ Simple namun powerful
+- ✅ Jelas demonstrasi machine-to-machine payments
+- ✅ Real use case untuk AI economy
+- ✅ Mudah di-demo dalam 5 menit
+- ✅ Scalable untuk production
+
+---
+
+## 💡 KONSEP PRODUK
+
+### **Nama Produk: "StacksAI Gateway"**
+
+**Tagline:** *"Pay-per-prompt AI access on Stacks blockchain - The future of machine-to-machine AI economy"*
+
+**Value Proposition:**
+- 🎯 Akses AI premium tanpa subscription
+- 💰 Bayar hanya untuk yang digunakan (micro-payments)
+- 🤖 Perfect untuk AI agents yang butuh akses ke AI lain
+- 🔒 Transparent on-chain payment verification
+- ⚡ Instant access setelah pembayaran
+
+---
+
+## 🏗️ ARSITEKTUR SISTEM (Simplified)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                         CLIENT SIDE                          │
+│  ┌────────────┐    ┌──────────────┐    ┌────────────────┐  │
+│  │  Web App   │    │  AI Agent    │    │  CLI Tool      │  │
+│  │  (React)   │    │  (Python)    │    │  (Node.js)     │  │
+│  └─────┬──────┘    └──────┬───────┘    └────────┬───────┘  │
+│        │                  │                      │           │
+└────────┼──────────────────┼──────────────────────┼───────────┘
+         │                  │                      │
+         │ HTTP Request     │                      │
+         │ (no payment)     │                      │
+         └──────────────────┴──────────────────────┘
+                            │
+                            ▼
+         ┌──────────────────────────────────────────┐
+         │       402 Payment Required Response       │
+         │  {                                        │
+         │    "amount": 100000,  // 0.1 STX         │
+         │    "recipient": "SP...",                  │
+         │    "resource": "/prompt/gpt4",           │
+         │    "nonce": "xyz123"                     │
+         │  }                                        │
+         └──────────────────────────────────────────┘
+                            │
+                            ▼
+         ┌──────────────────────────────────────────┐
+         │      Client Makes Payment on Stacks      │
+         │      Gets Transaction ID (txId)          │
+         └──────────────────────────────────────────┘
+                            │
+                            ▼
+         ┌──────────────────────────────────────────┐
+         │   Retry Request with Payment Proof       │
+         │   Header: X-Payment-Proof: {txId}        │
+         └──────────────────────────────────────────┘
+                            │
+                            ▼
+┌───────────────────────────────────────────────────────────────┐
+│                    STACKSAI GATEWAY                           │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              Payment Verification Layer                  │ │
+│  │  1. Verify txId on Stacks blockchain                    │ │
+│  │  2. Check amount & recipient                            │ │
+│  │  3. Validate nonce (prevent replay)                     │ │
+│  │  4. Mark nonce as used                                  │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                            │                                  │
+│                            ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              AI Provider Router                          │ │
+│  │  • OpenAI GPT-4                                         │ │
+│  │  • Anthropic Claude                                      │ │
+│  │  • Google Gemini                                         │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                            │                                  │
+└────────────────────────────┼──────────────────────────────────┘
+                             ▼
+              ┌──────────────────────────┐
+              │   AI Response Returned   │
+              │   + Usage Metadata       │
+              └──────────────────────────┘
+```
+
+---
+
+## 📁 STRUKTUR FOLDER PROJECT
+
+```
+stacksai-gateway/
+├── packages/
+│   ├── gateway/                 # Main API Gateway
+│   │   ├── src/
+│   │   │   ├── index.ts        # Express app entry
+│   │   │   ├── config/
+│   │   │   │   ├── env.ts      # Environment config
+│   │   │   │   └── pricing.ts  # AI model pricing
+│   │   │   ├── middleware/
+│   │   │   │   ├── x402.middleware.ts     # Core x402 logic
+│   │   │   │   ├── rateLimit.middleware.ts
+│   │   │   │   └── cors.middleware.ts
+│   │   │   ├── services/
+│   │   │   │   ├── stacks/
+│   │   │   │   │   ├── payment-verifier.ts
+│   │   │   │   │   ├── transaction-monitor.ts
+│   │   │   │   │   └── contract-caller.ts
+│   │   │   │   ├── ai/
+│   │   │   │   │   ├── openai.service.ts
+│   │   │   │   │   ├── anthropic.service.ts
+│   │   │   │   │   └── ai-router.service.ts
+│   │   │   │   └── cache/
+│   │   │   │       └── redis.service.ts
+│   │   │   ├── models/
+│   │   │   │   ├── payment.model.ts
+│   │   │   │   └── prompt.model.ts
+│   │   │   ├── routes/
+│   │   │   │   ├── prompt.routes.ts      # /v1/prompt/*
+│   │   │   │   ├── health.routes.ts
+│   │   │   │   └── stats.routes.ts
+│   │   │   └── utils/
+│   │   │       ├── nonce-generator.ts
+│   │   │       ├── crypto.utils.ts
+│   │   │       └── logger.ts
+│   │   ├── tests/
+│   │   │   ├── integration/
+│   │   │   └── unit/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── sdk/                     # Client SDK (untuk users)
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── client.ts        # Main SDK client
+│   │   │   ├── payment-handler.ts
+│   │   │   ├── wallet-connector.ts
+│   │   │   └── types/
+│   │   │       ├── index.ts
+│   │   │       └── api.types.ts
+│   │   ├── examples/
+│   │   │   ├── basic-usage.ts
+│   │   │   ├── agent-to-agent.ts
+│   │   │   └── batch-prompts.ts
+│   │   ├── README.md
+│   │   └── package.json
+│   │
+│   ├── web-demo/                # Frontend Demo
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── page.tsx     # Landing page
+│   │   │   │   ├── playground/
+│   │   │   │   │   └── page.tsx # Interactive playground
+│   │   │   │   └── docs/
+│   │   │   │       └── page.tsx # API docs
+│   │   │   ├── components/
+│   │   │   │   ├── PromptInput.tsx
+│   │   │   │   ├── PaymentModal.tsx
+│   │   │   │   ├── ResponseViewer.tsx
+│   │   │   │   └── WalletConnect.tsx
+│   │   │   ├── hooks/
+│   │   │   │   ├── useStacksAI.ts
+│   │   │   │   └── useWallet.ts
+│   │   │   └── lib/
+│   │   │       └── sdk-wrapper.ts
+│   │   ├── public/
+│   │   └── package.json
+│   │
+│   └── cli/                     # CLI Tool
+│       ├── src/
+│       │   ├── index.ts
+│       │   ├── commands/
+│       │   │   ├── prompt.ts
+│       │   │   ├── config.ts
+│       │   │   └── balance.ts
+│       │   └── utils/
+│       │       └── wallet-manager.ts
+│       ├── bin/
+│       │   └── stacksai.js
+│       └── package.json
+│
+├── contracts/                   # Clarity Smart Contracts
+│   ├── payment-gateway.clar    # Main payment contract
+│   ├── access-control.clar     # Access management
+│   └── revenue-sharing.clar    # Revenue distribution (optional)
+│
+├── infrastructure/
+│   ├── docker/
+│   │   ├── Dockerfile.gateway
+│   │   └── docker-compose.yml
+│   ├── kubernetes/             # K8s configs (if scaling)
+│   └── terraform/              # Infrastructure as Code
+│
+├── docs/
+│   ├── API.md                  # API Documentation
+│   ├── SDK.md                  # SDK Usage Guide
+│   ├── INTEGRATION.md          # Integration Guide
+│   ├── PRICING.md              # Pricing Model
+│   └── ARCHITECTURE.md         # System Architecture
+│
+├── scripts/
+│   ├── deploy-contracts.ts     # Deploy to Stacks
+│   ├── seed-db.ts             # Database seeding
+│   └── test-flow.ts           # End-to-end test
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── deploy.yml
+│
+├── .env.example
+├── package.json                # Root package.json (monorepo)
+├── turbo.json                  # Turborepo config
+├── README.md
+└── LICENSE
+```
+
+---
+
+## 🛠️ TECH STACK DETAIL
+
+### **Backend Gateway:**
+```json
+{
+  "runtime": "Node.js 20+",
+  "framework": "Express.js",
+  "language": "TypeScript",
+  "dependencies": {
+    "@stacks/transactions": "^6.13.0",
+    "@stacks/network": "^6.13.0",
+    "@stacks/blockchain-api-client": "^7.7.0",
+    "openai": "^4.28.0",
+    "@anthropic-ai/sdk": "^0.17.0",
+    "express": "^4.18.2",
+    "redis": "^4.6.0",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0",
+    "winston": "^3.11.0",
+    "bull": "^4.12.0"
+  }
+}
+```
+
+### **SDK:**
+```json
+{
+  "language": "TypeScript",
+  "bundler": "tsup",
+  "targets": ["node", "browser"],
+  "dependencies": {
+    "@stacks/connect": "^7.8.0",
+    "@stacks/wallet-sdk": "^6.13.0",
+    "axios": "^1.6.0"
+  }
+}
+```
+
+### **Frontend Demo:**
+```json
+{
+  "framework": "Next.js 14",
+  "language": "TypeScript",
+  "styling": "Tailwind CSS",
+  "ui": "shadcn/ui",
+  "dependencies": {
+    "@stacks/connect-react": "^22.0.0",
+    "react-query": "^5.17.0",
+    "zustand": "^4.4.0"
+  }
+}
+```
+
+### **Smart Contracts:**
+```
+Language: Clarity
+Tool: Clarinet 2.0+
+Network: Stacks Testnet (then Mainnet)
+```
+
+### **Infrastructure:**
+```
+Database: PostgreSQL (transaction logs)
+Cache: Redis (nonce storage, rate limiting)
+Queue: Bull (async job processing)
+Monitoring: Prometheus + Grafana
+Logging: Winston + Loki
+```
+
+---
+
+## 🔑 IMPLEMENTASI CORE COMPONENTS
+
+### **1. X402 Middleware (Core Logic)**
+
+```typescript
+// packages/gateway/src/middleware/x402.middleware.ts
+
+import { Request, Response, NextFunction } from 'express';
+import { StacksMainnet, StacksTestnet } from '@stacks/network';
+import { 
+  broadcastTransaction, 
+  makeSTXTokenTransfer,
+  AnchorMode 
+} from '@stacks/transactions';
+import { PaymentVerifier } from '../services/stacks/payment-verifier';
+import { NonceManager } from '../services/cache/nonce-manager';
+import { PricingService } from '../services/pricing.service';
+
+interface PaymentRequirement {
+  amount: number; // in micro-STX
+  recipient: string;
+  model: string;
+  estimatedTokens?: number;
+}
+
+export class X402Middleware {
+  private paymentVerifier: PaymentVerifier;
+  private nonceManager: NonceManager;
+  private pricingService: PricingService;
+  
+  constructor() {
+    this.paymentVerifier = new PaymentVerifier();
+    this.nonceManager = new NonceManager();
+    this.pricingService = new PricingService();
+  }
+
+  /**
+   * Main middleware untuk enforce payment
+   */
+  requirePayment(modelType: 'gpt4' | 'claude' | 'gemini') {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const paymentProof = req.headers['x-payment-proof'] as string;
+        const nonce = req.headers['x-payment-nonce'] as string;
+
+        // Jika tidak ada payment proof, return 402
+        if (!paymentProof) {
+          return this.sendPaymentRequired(res, modelType, req);
+        }
+
+        // Verify payment proof
+        const verification = await this.verifyPayment(
+          paymentProof,
+          nonce,
+          modelType
+        );
+
+        if (!verification.valid) {
+          return res.status(403).json({
+            error: 'Payment verification failed',
+            reason: verification.reason
+          });
+        }
+
+        // Payment valid, mark nonce as used
+        await this.nonceManager.markUsed(nonce);
+
+        // Attach payment info to request
+        req.paymentInfo = verification.payment;
+
+        next();
+      } catch (error) {
+        console.error('X402 Middleware Error:', error);
+        res.status(500).json({ error: 'Payment processing error' });
+      }
+    };
+  }
+
+  /**
+   * Send 402 response dengan payment instructions
+   */
+  private async sendPaymentRequired(
+    res: Response, 
+    modelType: string,
+    req: Request
+  ) {
+    const nonce = await this.nonceManager.generate();
+    const pricing = this.pricingService.getPrice(modelType);
+
+    const paymentInstructions = {
+      status: 402,
+      error: 'Payment Required',
+      payment: {
+        amount: pricing.basePrice, // in micro-STX (0.1 STX = 100000)
+        currency: 'STX',
+        recipient: process.env.PAYMENT_RECIPIENT_ADDRESS!,
+        network: process.env.STACKS_NETWORK || 'testnet',
+        resource: `/v1/prompt/${modelType}`,
+        nonce: nonce,
+        estimatedCost: {
+          usd: pricing.usdEquivalent,
+          stx: pricing.basePrice / 1_000_000
+        },
+        expires_in: 300 // 5 minutes
+      },
+      instructions: {
+        step1: 'Make STX transfer to the recipient address',
+        step2: 'Include the transaction ID in X-Payment-Proof header',
+        step3: 'Include the nonce in X-Payment-Nonce header',
+        step4: 'Retry the request with payment proof'
+      },
+      // Helper untuk client SDK
+      sdk_example: {
+        javascript: `
+const { StacksAIClient } = require('@stacksai/sdk');
+const client = new StacksAIClient();
+const response = await client.prompt('${modelType}', 'Your prompt here');
+        `.trim()
+      }
+    };
+
+    // Set proper headers
+    res.set('WWW-Authenticate', `Stacks realm="${modelType}"`);
+    res.set('X-Payment-Amount', pricing.basePrice.toString());
+    res.set('X-Payment-Currency', 'STX');
+    res.set('X-Payment-Recipient', process.env.PAYMENT_RECIPIENT_ADDRESS!);
+
+    return res.status(402).json(paymentInstructions);
+  }
+
+  /**
+   * Verify payment on Stacks blockchain
+   */
+  private async verifyPayment(
+    txId: string,
+    nonce: string,
+    modelType: string
+  ): Promise<VerificationResult> {
+    // 1. Check nonce belum dipakai
+    const nonceUsed = await this.nonceManager.isUsed(nonce);
+    if (nonceUsed) {
+      return {
+        valid: false,
+        reason: 'Nonce already used (replay attack prevention)'
+      };
+    }
+
+    // 2. Check nonce belum expired
+    const nonceValid = await this.nonceManager.isValid(nonce);
+    if (!nonceValid) {
+      return {
+        valid: false,
+        reason: 'Nonce expired'
+      };
+    }
+
+    // 3. Verify transaction on blockchain
+    const txVerification = await this.paymentVerifier.verifyTransaction(txId);
+    
+    if (!txVerification.success) {
+      return {
+        valid: false,
+        reason: txVerification.error || 'Transaction not found or pending'
+      };
+    }
+
+    // 4. Check amount
+    const expectedAmount = this.pricingService.getPrice(modelType).basePrice;
+    if (txVerification.amount < expectedAmount) {
+      return {
+        valid: false,
+        reason: `Insufficient payment. Expected: ${expectedAmount}, Got: ${txVerification.amount}`
+      };
+    }
+
+    // 5. Check recipient
+    if (txVerification.recipient !== process.env.PAYMENT_RECIPIENT_ADDRESS) {
+      return {
+        valid: false,
+        reason: 'Invalid recipient address'
+      };
+    }
+
+    return {
+      valid: true,
+      payment: {
+        txId,
+        amount: txVerification.amount,
+        sender: txVerification.sender,
+        timestamp: txVerification.timestamp
+      }
+    };
+  }
+}
+
+interface VerificationResult {
+  valid: boolean;
+  reason?: string;
+  payment?: {
+    txId: string;
+    amount: number;
+    sender: string;
+    timestamp: number;
+  };
+}
+```
+
+### **2. Payment Verifier Service**
+
+```typescript
+// packages/gateway/src/services/stacks/payment-verifier.ts
+
+import { 
+  TransactionsApi, 
+  Configuration 
+} from '@stacks/blockchain-api-client';
+import { StacksMainnet, StacksTestnet } from '@stacks/network';
+
+export class PaymentVerifier {
+  private api: TransactionsApi;
+  private network: StacksMainnet | StacksTestnet;
+
+  constructor() {
+    const isMainnet = process.env.STACKS_NETWORK === 'mainnet';
+    this.network = isMainnet ? new StacksMainnet() : new StacksTestnet();
+    
+    const config = new Configuration({
+      basePath: this.network.coreApiUrl
+    });
+    
+    this.api = new TransactionsApi(config);
+  }
+
+  async verifyTransaction(txId: string): Promise<TransactionVerification> {
+    try {
+      const tx = await this.api.getTransactionById({ txId });
+
+      // Check transaction status
+      if (tx.tx_status !== 'success') {
+        return {
+          success: false,
+          error: `Transaction status: ${tx.tx_status}`
+        };
+      }
+
+      // Ensure it's STX transfer
+      if (tx.tx_type !== 'token_transfer') {
+        return {
+          success: false,
+          error: 'Not a token transfer transaction'
+        };
+      }
+
+      const tokenTransfer = tx.token_transfer;
+      
+      return {
+        success: true,
+        amount: parseInt(tokenTransfer.amount),
+        recipient: tokenTransfer.recipient_address,
+        sender: tx.sender_address,
+        timestamp: tx.burn_block_time,
+        blockHeight: tx.block_height
+      };
+
+    } catch (error) {
+      console.error('Transaction verification error:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch transaction'
+      };
+    }
+  }
+
+  async waitForConfirmation(
+    txId: string, 
+    maxWaitTime: number = 60000
+  ): Promise<boolean> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      const result = await this.verifyTransaction(txId);
+      
+      if (result.success) {
+        return true;
+      }
+
+      // Wait 5 seconds before retry
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+
+    return false;
+  }
+}
+
+interface TransactionVerification {
+  success: boolean;
+  error?: string;
+  amount?: number;
+  recipient?: string;
+  sender?: string;
+  timestamp?: number;
+  blockHeight?: number;
+}
+```
+
+### **3. AI Router Service**
+
+```typescript
+// packages/gateway/src/services/ai/ai-router.service.ts
+
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+
+export class AIRouterService {
+  private openai: OpenAI;
+  private anthropic: Anthropic;
+
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    this.anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY
+    });
+  }
+
+  async routePrompt(
+    model: string,
+    prompt: string,
+    options?: PromptOptions
+  ): Promise<AIResponse> {
+    const startTime = Date.now();
+
+    try {
+      let response;
+      let tokensUsed;
+
+      switch (model) {
+        case 'gpt4':
+          response = await this.callOpenAI('gpt-4-turbo-preview', prompt, options);
+          tokensUsed = response.usage;
+          break;
+
+        case 'claude':
+          response = await this.callAnthropic('claude-3-opus-20240229', prompt, options);
+          tokensUsed = response.usage;
+          break;
+
+        case 'gpt-3.5':
+          response = await this.callOpenAI('gpt-3.5-turbo', prompt, options);
+          tokensUsed = response.usage;
+          break;
+
+        default:
+          throw new Error(`Unsupported model: ${model}`);
+      }
+
+      const latency = Date.now() - startTime;
+
+      return {
+        model,
+        response: response.content,
+        usage: tokensUsed,
+        latency,
+        timestamp: new Date().toISOString()
+      };
+
+    } catch (error) {
+      throw new Error(`AI routing failed: ${error.message}`);
+    }
+  }
+
+  private async callOpenAI(model: string, prompt: string, options?: PromptOptions) {
+    const completion = await this.openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: options?.maxTokens || 1000,
+      temperature: options?.temperature || 0.7
+    });
+
+    return {
+      content: completion.choices[0].message.content,
+      usage: {
+        promptTokens: completion.usage?.prompt_tokens || 0,
+        completionTokens: completion.usage?.completion_tokens || 0,
+        totalTokens: completion.usage?.total_tokens || 0
+      }
+    };
+  }
+
+  private async callAnthropic(model: string, prompt: string, options?: PromptOptions) {
+    const message = await this.anthropic.messages.create({
+      model,
+      max_tokens: options?.maxTokens || 1000,
+      messages: [{ role: 'user', content: prompt }]
+    });
+
+    return {
+      content: message.content[0].type === 'text' ? message.content[0].text : '',
+      usage: {
+        promptTokens: message.usage.input_tokens,
+        completionTokens: message.usage.output_tokens,
+        totalTokens: message.usage.input_tokens + message.usage.output_tokens
+      }
+    };
+  }
+}
+
+interface PromptOptions {
+  maxTokens?: number;
+  temperature?: number;
+  systemPrompt?: string;
+}
+
+interface AIResponse {
+  model: string;
+  response: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  latency: number;
+  timestamp: string;
+}
+```
+
+### **4. Client SDK**
+
+```typescript
+// packages/sdk/src/client.ts
+
+import { openSTXTransfer } from '@stacks/connect';
+import axios, { AxiosInstance } from 'axios';
+
+export class StacksAIClient {
+  private api: AxiosInstance;
+  private gatewayUrl: string;
+  private walletConnected: boolean = false;
+
+  constructor(config?: ClientConfig) {
+    this.gatewayUrl = config?.gatewayUrl || 'https://api.stacksai.xyz';
+    
+    this.api = axios.create({
+      baseURL: this.gatewayUrl,
+      timeout: 30000
+    });
+  }
+
+  /**
+   * Send prompt dengan auto-payment handling
+   */
+  async prompt(
+    model: 'gpt4' | 'claude' | 'gpt-3.5',
+    prompt: string,
+    options?: PromptOptions
+  ): Promise<AIResponse> {
+    try {
+      // Try request tanpa payment dulu
+      const response = await this.api.post(`/v1/prompt/${model}`, {
+        prompt,
+        ...options
+      });
+
+      return response.data;
+
+    } catch (error) {
+      // Jika 402, handle payment
+      if (error.response?.status === 402) {
+        const paymentInfo = error.response.data.payment;
+        
+        console.log('💰 Payment required:', {
+          amount: `${paymentInfo.amount / 1_000_000} STX`,
+          usd: `$${paymentInfo.estimatedCost.usd}`
+        });
+
+        // Make payment
+        const txId = await this.makePayment(paymentInfo);
+        
+        console.log('✅ Payment sent:', txId);
+        console.log('⏳ Waiting for confirmation...');
+
+        // Wait for confirmation (5-10 seconds on testnet)
+        await this.waitForConfirmation(txId);
+
+        console.log('✅ Payment confirmed!');
+
+        // Retry dengan payment proof
+        const retryResponse = await this.api.post(
+          `/v1/prompt/${model}`,
+          { prompt, ...options },
+          {
+            headers: {
+              'X-Payment-Proof': txId,
+              'X-Payment-Nonce': paymentInfo.nonce
+            }
+          }
+        );
+
+        return retryResponse.data;
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Make STX payment menggunakan Stacks wallet
+   */
+  private async makePayment(paymentInfo: any): Promise<string> {
+    return new Promise((resolve, reject) => {
+      openSTXTransfer({
+        recipient: paymentInfo.recipient,
+        amount: paymentInfo.amount.toString(),
+        memo: `StacksAI: ${paymentInfo.resource}`,
+        network: paymentInfo.network,
+        onFinish: (data) => {
+          resolve(data.txId);
+        },
+        onCancel: () => {
+          reject(new Error('Payment cancelled by user'));
+        }
+      });
+    });
+  }
+
+  /**
+   * Wait for transaction confirmation
+   */
+  private async waitForConfirmation(txId: string): Promise<void> {
+    const maxWait = 60000; // 60 seconds
+    const interval = 5000; // Check every 5 seconds
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWait) {
+      try {
+        const response = await this.api.get(`/v1/transaction/${txId}/status`);
+        
+        if (response.data.status === 'confirmed') {
+          return;
+        }
+      } catch (error) {
+        // Continue waiting
+      }
+
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error('Payment confirmation timeout');
+  }
+}
+
+interface ClientConfig {
+  gatewayUrl?: string;
+  network?: 'mainnet' | 'testnet';
+}
+
+interface PromptOptions {
+  maxTokens?: number;
+  temperature?: number;
+  stream?: boolean;
+}
+
+interface AIResponse {
+  model: string;
+  response: string;
+  usage: TokenUsage;
+  payment: PaymentInfo;
+  timestamp: string;
+}
+
+// Usage example:
+/*
+const client = new StacksAIClient();
+
+const response = await client.prompt('gpt4', 'Explain quantum computing');
+console.log(response.response);
+*/
+```
+
+---
+
+## 💰 PRICING MODEL
+
+```typescript
+// packages/gateway/src/config/pricing.ts
+
+export const PRICING_MODEL = {
+  'gpt4': {
+    basePrice: 100000,      // 0.1 STX per prompt
+    usdEquivalent: 0.20,    // ~$0.20
+    maxTokens: 2000,
+    description: 'GPT-4 Turbo - Most capable model'
+  },
+  'claude': {
+    basePrice: 120000,      // 0.12 STX per prompt
+    usdEquivalent: 0.24,
+    maxTokens: 2000,
+    description: 'Claude 3 Opus - Advanced reasoning'
+  },
+  'gpt-3.5': {
+    basePrice: 20000,       // 0.02 STX per prompt
+    usdEquivalent: 0.04,
+    maxTokens: 1500,
+    description: 'GPT-3.5 Turbo - Fast and efficient'
+  },
+  'gemini': {
+    basePrice: 50000,       // 0.05 STX per prompt
+    usdEquivalent: 0.10,
+    maxTokens: 2000,
+    description: 'Gemini Pro - Google AI'
+  }
+};
+
+// Dynamic pricing berdasarkan token usage (future feature)
+export function calculateDynamicPrice(
+  model: string,
+  estimatedTokens: number
+): number {
+  const basePrice = PRICING_MODEL[model].basePrice;
+  const tokenMultiplier = estimatedTokens / 1000; // per 1k tokens
+  
+  return Math.ceil(basePrice * (0.5 + tokenMultiplier * 0.5));
+}
+```
+
+---
+
+## 📋 TIMELINE 7 HARI (Detailed)
+
+### **Day 1: Foundation (9 Feb)**
+- ✅ Setup monorepo (Turborepo/pnpm workspace)
+- ✅ Initialize packages: gateway, sdk, web-demo
+- ✅ Setup TypeScript configs
+- ✅ Create basic Express server
+- ✅ Implement X402 middleware skeleton
+- ✅ Setup Redis untuk nonce management
+- ✅ Write Clarity smart contract (basic version)
+- ✅ Deploy contract to testnet
+
+**Deliverable:** Server bisa return 402 response
+
+---
+
+### **Day 2: Payment Flow (10 Feb)**
+- ✅ Implement PaymentVerifier service
+- ✅ Connect to Stacks blockchain API
+- ✅ Test transaction verification
+- ✅ Implement nonce generation & validation
+- ✅ Add Redis caching layer
+- ✅ Complete X402 middleware logic
+- ✅ Unit tests untuk payment flow
+
+**Deliverable:** Payment verification working end-to-end
+
+---
+
+### **Day 3: AI Integration (11 Feb)**
+- ✅ Setup OpenAI API integration
+- ✅ Setup Anthropic API integration
+- ✅ Implement AIRouterService
+- ✅ Add error handling & retries
+- ✅ Implement rate limiting
+- ✅ Add usage tracking & logging
+- ✅ Test all AI models
+
+**Deliverable:** AI routing functional dengan semua models
+
+---
+
+### **Day 4: SDK Development (12 Feb)**
+- ✅ Build client SDK
+- ✅ Implement auto-payment handling
+- ✅ Add wallet integration (@stacks/connect)
+- ✅ Write SDK documentation
+- ✅ Create usage examples
+- ✅ Publish to npm (beta)
+- ✅ Test SDK in different scenarios
+
+**Deliverable:** SDK working, published, documented
+
+---
+
+### **Day 5: Frontend Demo (13 Feb)**
+- ✅ Build Next.js landing page
+- ✅ Create interactive playground
+- ✅ Implement wallet connection UI
+- ✅ Add payment flow visualization
+- ✅ Create API documentation page
+- ✅ Add analytics dashboard (simple)
+- ✅ Deploy to Vercel
+
+**Deliverable:** Beautiful, working web demo
+
+---
+
+### **Day 6: Polish & Testing (14 Feb)**
+- ✅ End-to-end testing
+- ✅ Fix bugs from testing
+- ✅ Add monitoring & logging
+- ✅ Optimize performance
+- ✅ Security review
+- ✅ Add error messages yang jelas
+- ✅ Final deployment checks
+
+**Deliverable:** Production-ready system
+
+---
+
+### **Day 7: Documentation & Video (15 Feb)**
+- ✅ Write comprehensive README
+- ✅ Complete API documentation
+- ✅ Write integration guide
+- ✅ Create architecture diagram
+- ✅ **Record demo video (5 min)**
+- ✅ Prepare submission materials
+- ✅ Submit before 23:59 UTC
+
+**Deliverable:** Complete submission package
+
+---
+
+## 🎬 DEMO VIDEO SCRIPT (5 Minutes)
+
+### **Minute 1: Problem & Solution**
+- Intro: Current AI access requires subscriptions
+- Problem: No pay-per-use option, no machine-to-machine payments
+- Solution: StacksAI Gateway dengan x402-stacks
+
+### **Minute 2: Live Demo - Web Interface**
+- Show landing page
+- Connect wallet
+- Send prompt tanpa payment → get 402
+- Make payment via wallet popup
+- Get AI response
+- Show transaction on explorer
+
+### **Minute 3: Live Demo - SDK**
+- Show code editor
+- Simple 5-line code example
+- Run script → auto payment → get response
+- Highlight simplicity
+
+### **Minute 4: Agent-to-Agent Demo**
+- Show Python agent script
+- Agent autonomously pays for AI access
+- Real use case: AI agent using another AI
+- Show transaction flow
+
+### **Minute 5: Impact & Future**
+- Stats: latency, success rate
+- Economics: total payments, revenue
+- Future: dynamic pricing, more models
+- Call to action: try the demo
+
+---
+
+## 🚀 DEPLOYMENT STRATEGY
+
+### **Testnet (for Hackathon):**
+```
+Gateway: Railway.app / Render
+Frontend: Vercel
+Contract: Stacks Testnet
+Redis: Redis Cloud (free tier)
+Database: PostgreSQL (Supabase free tier)
+```
+
+### **Monitoring:**
+```
+Logs: Winston + Better Stack
+Metrics: Simple analytics endpoint
+Errors: Sentry (free tier)
+```
+
+---
+
+## 📊 SUCCESS METRICS
+
+### **Technical:**
+- ✅ 402 response time < 100ms
+- ✅ Payment verification < 10s
+- ✅ AI response latency < 5s (after payment)
+- ✅ 99% uptime during demo period
+- ✅ Zero payment failures
+
+### **Business:**
+- ✅ Clear value proposition
+- ✅ Simple developer experience
+- ✅ Working SDK with examples
+- ✅ Comprehensive documentation
+- ✅ Professional presentation
+
+---
+
+Apakah Anda siap untuk mulai coding? Saya bisa:
+
+1. **Generate boilerplate code** untuk semua packages
+2. **Buat step-by-step setup guide** 
+3. **Detail specific component** yang Anda butuhkan
+4. **Create testing scenarios**
+
+Bagian mana yang ingin kita mulai dulu? 🚀
