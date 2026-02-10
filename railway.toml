@@ -1,0 +1,15 @@
+[build]
+builder = "nixpacks"
+
+[build.nixpacksPlan.phases.install]
+cmds = [
+  "corepack enable",
+  "corepack prepare pnpm@latest --activate",
+  "pnpm install --no-frozen-lockfile"
+]
+
+[build.nixpacksPlan.phases.build]
+cmds = ["pnpm --filter gateway build"]
+
+[deploy]
+startCommand = "pnpm --filter gateway start"
